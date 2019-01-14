@@ -134,8 +134,8 @@ This library has the following limitations:
     but we could do a better job and say it is actually a
     private module.
 
-  * Private modules appear literally as `:"modulep_DDD_Elixir.Foo.Bar"`
-    in stacktraces and they could enjoy a better format.
+  * Private modules are printed literally as `:"modulep_DDD_Elixir.Foo.Bar"`
+    but they could be shown as `Foo.Bar` when inspected.
 
   * If you define a module `defmodule Public` nested inside
     `defmodulep Private`, `Public` cannot be accessed directly
