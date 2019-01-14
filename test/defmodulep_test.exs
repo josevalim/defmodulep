@@ -65,24 +65,44 @@ defmodule Defmodulep.Test do
     assert WithoutVisibleTo.returns_ok() == :ok
   end
 
-  name = DynamicPrivate
+  describe "naming" do
+    name = DynamicPrivate
 
-  defmodulep name, visible_to: [Defmodulep.Test] do
-    def returns_ok, do: :ok
-  end
+    defmodulep name, visible_to: [Defmodulep.Test] do
+      def returns_ok, do: :ok
+    end
 
-  test "with dynamic name" do
-    requirep DynamicPrivate, as: DynamicPrivate
-    assert DynamicPrivate.returns_ok() == :ok
-  end
+    test "dynamic" do
+      requirep DynamicPrivate, as: DynamicPrivate
+      assert DynamicPrivate.returns_ok() == :ok
+    end
 
-  defmodulep Elixir.RootPrivate, visible_to: [Defmodulep.Test] do
-    def returns_ok, do: :ok
-  end
+    defmodulep Elixir.RootPrivate, visible_to: [Defmodulep.Test] do
+      def returns_ok, do: :ok
+    end
 
-  test "with root name" do
-    requirep RootPrivate, as: RootPrivate
-    assert RootPrivate.returns_ok() == :ok
+    test "root" do
+      requirep RootPrivate, as: RootPrivate
+      assert RootPrivate.returns_ok() == :ok
+    end
+
+    defmodulep :defmodulep_example, visible_to: [Defmodulep.Test] do
+      def returns_ok, do: :ok
+    end
+
+    test "atom" do
+      requirep :defmodulep_example, as: AtomExample
+      assert AtomExample.returns_ok() == :ok
+    end
+
+    defmodulep __MODULE__.NonAtomAlias, visible_to: [Defmodulep.Test] do
+      def returns_ok, do: :ok
+    end
+
+    test "non-atom alias" do
+      requirep Elixir.Defmodulep.Test.Defmodulep.Test.NonAtomAlias, as: NonAtomAlias
+      assert NonAtomAlias.returns_ok() == :ok
+    end
   end
 
   describe "nesting" do

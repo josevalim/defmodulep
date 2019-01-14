@@ -54,16 +54,24 @@ defmodule Defmodulep do
   defp alias_meta({:__aliases__, meta, _}), do: meta
   defp alias_meta(_), do: []
 
+  # defmodulep :atom
+  defp expand_private(raw, module, _env) when is_atom(raw),
+    do: {private_name(Atom.to_string(module)), nil}
+
   # defmodulep Elixir.Alias
   defp expand_private({:__aliases__, _, [:"Elixir", _ | _]}, module, _env),
     do: {private_name(Atom.to_string(module)), nil}
 
+  # defmodulep Alias in root
+  defp expand_private({:__aliases__, _, _}, module, nil),
+    do: {private_name(Atom.to_string(module)), nil}
+
   # defmodulep Alias nested
-  defp expand_private({:__aliases__, _, [head]} = alias, _, env_module) when env_module != nil,
+  defp expand_private({:__aliases__, _, [head]} = alias, _, env_module),
     do: {private_name("#{env_module}.#{head}"), alias}
 
   # defmodulep Alias.Other
-  defp expand_private({:__aliases__, _, [_ | _]} = alias, _, env_module) when env_module != nil do
+  defp expand_private({:__aliases__, _, [head | _]} = alias, _, _env_module) when is_atom(head) do
     raise ArgumentError, """
     cannot define multi-level private module #{Macro.to_string(alias)} nested in another module.
 
@@ -91,8 +99,9 @@ defmodule Defmodulep do
     """
   end
 
-  defp expand_private(_, module, _) do
-    {private_name(Atom.to_string(module)), nil}
+  defp expand_private(_, module, env_module) do
+    concat = :elixir_aliases.concat([env_module, module])
+    {private_name(Atom.to_string(concat)), nil}
   end
 
   @doc """
