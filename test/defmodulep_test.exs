@@ -100,7 +100,7 @@ defmodule Defmodulep.Test do
     end
 
     test "non-atom alias" do
-      requirep Elixir.Defmodulep.Test.Defmodulep.Test.NonAtomAlias, as: NonAtomAlias
+      requirep Elixir.Defmodulep.Test.NonAtomAlias, as: NonAtomAlias
       assert NonAtomAlias.returns_ok() == :ok
     end
   end

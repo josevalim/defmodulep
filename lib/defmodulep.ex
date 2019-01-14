@@ -54,10 +54,6 @@ defmodule Defmodulep do
   defp alias_meta({:__aliases__, meta, _}), do: meta
   defp alias_meta(_), do: []
 
-  # defmodulep :atom
-  defp expand_private(raw, module, _env) when is_atom(raw),
-    do: {private_name(Atom.to_string(module)), nil}
-
   # defmodulep Elixir.Alias
   defp expand_private({:__aliases__, _, [:"Elixir", _ | _]}, module, _env),
     do: {private_name(Atom.to_string(module)), nil}
@@ -99,9 +95,8 @@ defmodule Defmodulep do
     """
   end
 
-  defp expand_private(_, module, env_module) do
-    concat = :elixir_aliases.concat([env_module, module])
-    {private_name(Atom.to_string(concat)), nil}
+  defp expand_private(_, module, _) do
+    {private_name(Atom.to_string(module)), nil}
   end
 
   @doc """
