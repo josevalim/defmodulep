@@ -86,15 +86,6 @@ defmodule Defmodulep.Test do
       assert RootPrivate.returns_ok() == :ok
     end
 
-    defmodulep :defmodulep_example, visible_to: [Defmodulep.Test] do
-      def returns_ok, do: :ok
-    end
-
-    test "atom" do
-      requirep :defmodulep_example, as: AtomExample
-      assert AtomExample.returns_ok() == :ok
-    end
-
     defmodulep __MODULE__.NonAtomAlias, visible_to: [Defmodulep.Test] do
       def returns_ok, do: :ok
     end
@@ -102,6 +93,18 @@ defmodule Defmodulep.Test do
     test "non-atom alias" do
       requirep Elixir.Defmodulep.Test.NonAtomAlias, as: NonAtomAlias
       assert NonAtomAlias.returns_ok() == :ok
+    end
+
+    test "raises on atom names" do
+      assert_raise ArgumentError,
+                   "private modules can only be defined for aliases, such as Foo.Bar, got: :defmodulep_example",
+                   fn ->
+                     name = :defmodulep_example
+
+                     defmodulep name, visible_to: [Defmodulep.Test] do
+                       def returns_ok, do: :ok
+                     end
+                   end
     end
   end
 
@@ -131,13 +134,13 @@ defmodule Defmodulep.Test do
     requirep Lib.Private, as: Private
 
     test "aliases to string" do
-      assert Atom.to_string(Private) == "modulep_028_Elixir.Lib.Private"
+      assert Atom.to_string(Private) == "Elixirp.Lib.Private"
     end
 
     test "aliases to string of nested private" do
       requirep Lib.Private, as: Private
       requirep Private.Private, as: NestedPrivate
-      assert Atom.to_string(NestedPrivate) == "modulep_936_Elixir.Lib.Private.Private"
+      assert Atom.to_string(NestedPrivate) == "Elixirp.Lib.Private.Private"
     end
 
     @tag :skip

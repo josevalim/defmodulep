@@ -56,15 +56,15 @@ defmodule Defmodulep do
 
   # defmodulep Elixir.Alias
   defp expand_private({:__aliases__, _, [:"Elixir", _ | _]}, module, _env),
-    do: {private_name(Atom.to_string(module)), nil}
+    do: {private_from_expanded!(Atom.to_string(module)), nil}
 
   # defmodulep Alias in root
   defp expand_private({:__aliases__, _, _}, module, nil),
-    do: {private_name(Atom.to_string(module)), nil}
+    do: {private_from_expanded!(Atom.to_string(module)), nil}
 
   # defmodulep Alias nested
   defp expand_private({:__aliases__, _, [head]} = alias, _, env_module),
-    do: {private_name("#{env_module}.#{head}"), alias}
+    do: {private_from_expanded!("#{env_module}.#{head}"), alias}
 
   # defmodulep Alias.Other
   defp expand_private({:__aliases__, _, [head | _]} = alias, _, _env_module) when is_atom(head) do
@@ -96,7 +96,7 @@ defmodule Defmodulep do
   end
 
   defp expand_private(_, module, _) do
-    {private_name(Atom.to_string(module)), nil}
+    {private_from_expanded!(Atom.to_string(module)), nil}
   end
 
   @doc """
@@ -114,15 +114,15 @@ defmodule Defmodulep do
       raise ArgumentError, "requirep expects an alias that expands to an atom at compile time"
     end
 
-    # TODO: This is a workaround because Module.concat/2 does not know about modulep
+    # TODO: This is a workaround because Module.concat/2 does not know about Elixirp
     expanded =
       case Atom.to_string(expanded) do
-        "Elixir.modulep_" <> rest -> :"modulep_#{rest}"
+        "Elixir.Elixirp." <> rest -> :"Elixirp.#{rest}"
         _ -> expanded
       end
 
-    mod = __CALLER__.module |> Atom.to_string() |> remove_private_prefix()
-    private = expanded |> Atom.to_string() |> private_name()
+    mod = __CALLER__.module |> Atom.to_string() |> rewrite_private_prefix()
+    private = expanded |> Atom.to_string() |> private_from_expanded!()
 
     unless Code.ensure_compiled?(private) do
       raise ArgumentError,
@@ -155,7 +155,7 @@ defmodule Defmodulep do
       raise ArgumentError, "defmodulep expected an atom as module name, got: #{inspect(expanded)}"
     end
 
-    private_name(Atom.to_string(expanded))
+    private_from_expanded!(Atom.to_string(expanded))
   end
 
   @doc false
@@ -192,19 +192,21 @@ defmodule Defmodulep do
     Module.put_attribute(module, :moduledoc, {line, false})
   end
 
-  defp private_name(string) when is_binary(string) do
-    module = remove_private_prefix(string)
-    :"modulep_#{hash(module)}_#{module}"
-  end
+  defp private_from_expanded!(string) when is_binary(string) do
+    case string do
+      "Elixirp." <> _ ->
+        String.to_atom(string)
 
-  defp remove_private_prefix(<<"modulep_", _, _, _, "_", rest::binary>>), do: rest
-  defp remove_private_prefix(rest), do: rest
+      "Elixir." <> rest ->
+        String.to_atom("Elixirp." <> rest)
 
-  defp hash(expanded) when is_binary(expanded) do
-    case :erlang.phash2(expanded, 1000) do
-      number when number < 10 -> <<?0, ?0>> <> Integer.to_string(number)
-      number when number < 100 -> <<?0>> <> Integer.to_string(number)
-      number when number < 1000 -> Integer.to_string(number)
+      _ ->
+        raise ArgumentError,
+              "private modules can only be defined for aliases, such as Foo.Bar, " <>
+                "got: #{inspect(String.to_atom(string))}"
     end
   end
+
+  defp rewrite_private_prefix(<<"Elixirp.", rest::binary>>), do: "Elixir." <> rest
+  defp rewrite_private_prefix(rest), do: rest
 end

@@ -110,12 +110,11 @@ end
 
 Private modules work by being assigned a different naming
 structure. If you define a private module `Foo.Bar`, it will
-actually be compiled as `:"modulep_DDD_Elixir.Foo.Bar"`, where
-`DDD` will be a arbitrarily assigned number. The number is
-arbitrary to discourage developers from accessing the underlying
-module directly, as **this number may change at any time**.
-The only way to safely access a private module is by calling
-`requirep` first.
+actually be compiled as `:"Elixirp.Foo.Bar"`. This naming is
+public, which means you can access it directly if you want to
+bypass the visibility rules in rare situations such as debugging
+of live system. Note that bypassing such behaviour is **extremely
+discouraged** otherwise
 
 ## Limitations
 
@@ -134,14 +133,14 @@ This library has the following limitations:
     but we could do a better job and say it is actually a
     private module.
 
-  * Private modules are printed literally as `:"modulep_DDD_Elixir.Foo.Bar"`
+  * Private modules are printed literally as `:"Elixirp.Foo.Bar"`
     but they could be shown as `Foo.Bar` when inspected.
 
   * If you define a module `defmodule Public` nested inside
     `defmodulep Private`, `Public` cannot be accessed directly
     but only via `requirep Private, as: Private` and then by
     calling `Private.Public`. This can be fixed if we change
-    `Module.concat/1` to be aware of `modulep_DDD_` prefixes.
+    `Module.concat/1` to be aware of `Elixirp` prefixes.
     In other words, a `defmodule Public` inside `defmodulep`
     should remain public but it doesn't in this implementation.
     This is an important property to hold because Elixir doesn't
